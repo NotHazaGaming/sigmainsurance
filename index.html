@@ -1,55 +1,188 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Email System</title>
+    <title>Fordham Vehicle Hire</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        select, input {
+            padding: 8px;
+            width: 200px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            white-space: pre-line;
+        }
+    </style>
 </head>
 <body>
-    <div>
-        <h2>Email System</h2>
-        <input type="email" id="emailInput" placeholder="Enter your email">
-        <button onclick="handleEmail()">Submit</button>
-        <p id="message"></p>
+    <h1>Fordham Vehicle Hire Quote Generator</h1>
+    
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" onblur="checkExistingCustomer()">
     </div>
 
+    <div class="form-group">
+        <label for="vehicleType">Vehicle Type:</label>
+        <select id="vehicleType">
+            <option value="S">Saloon</option>
+            <option value="HP">High Performance</option>
+            <option value="V">Van</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="days">Number of Days:</label>
+        <select id="days">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="insurance">Insurance Required:</label>
+        <select id="insurance">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="customerType">Customer Type:</label>
+        <select id="customerType" onchange="handleCustomerTypeChange()">
+            <option value="new">New</option>
+            <option value="existing">Existing</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="loyaltyCard">Loyalty Card:</label>
+        <select id="loyaltyCard" disabled>
+            <option value="">None</option>
+            <option value="bronze">Bronze</option>
+            <option value="silver">Silver</option>
+            <option value="gold">Gold</option>
+        </select>
+    </div>
+
+    <button onclick="generateQuote()">Generate Quote</button>
+
+    <div id="result"></div>
+
     <script>
-        async function handleEmail() {
-            const email = document.getElementById('emailInput').value;
-            const messageElement = document.getElementById('message');
+        async function checkExistingCustomer() {
+            const email = document.getElementById('email').value;
+            if (!email) return;
 
             try {
-                // Check if email exists
-                const checkResponse = await fetch('/check-email', {
+                const response = await fetch('/check-email', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ email })
                 });
-                const checkData = await checkResponse.json();
-
-                if (checkData.exists) {
-                    messageElement.textContent = 'Welcome back!';
-                    return;
-                }
-
-                // Save new email
-                const saveResponse = await fetch('/save-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email })
-                });
-                const saveData = await saveResponse.json();
-
-                if (saveData.success) {
-                    messageElement.textContent = 'Email saved successfully!';
-                } else {
-                    messageElement.textContent = 'Error saving email.';
+                const data = await response.json();
+                
+                if (data.exists) {
+                    document.getElementById('customerType').value = 'existing';
+                    document.getElementById('loyaltyCard').disabled = false;
+                    if (data.loyaltyCard) {
+                        document.getElementById('loyaltyCard').value = data.loyaltyCard;
+                    }
                 }
             } catch (error) {
-                messageElement.textContent = 'An error occurred.';
                 console.error('Error:', error);
+            }
+        }
+
+        function handleCustomerTypeChange() {
+            const customerType = document.getElementById('customerType').value;
+            const loyaltyCard = document.getElementById('loyaltyCard');
+            loyaltyCard.disabled = customerType === 'new';
+            if (customerType === 'new') {
+                loyaltyCard.value = '';
+            }
+        }
+
+        async function generateQuote() {
+            const vehicleType = document.getElementById('vehicleType').value;
+            const days = document.getElementById('days').value;
+            const insurance = document.getElementById('insurance').value;
+            const customerType = document.getElementById('customerType').value;
+            const loyaltyCard = document.getElementById('loyaltyCard').value;
+            const email = document.getElementById('email').value;
+
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
+
+            try {
+                const response = await fetch('/calculate-hire', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        vehicleType,
+                        days: parseInt(days),
+                        insurance,
+                        loyaltyCard: customerType === 'existing' ? loyaltyCard : null
+                    })
+                });
+
+                const data = await response.json();
+                const resultDiv = document.getElementById('result');
+                
+                let discountsText = data.discounts
+                    .filter(d => d)
+                    .join('\n');
+
+                resultDiv.textContent = `
+                    ---- Vehicle Hire Quote ----
+                    Vehicle Type: ${vehicleType === 'S' ? 'Saloon' : vehicleType === 'HP' ? 'High Performance' : 'Van'}
+                    Number of Days Hired: ${days}
+                    Customer Type: ${customerType.charAt(0).toUpperCase() + customerType.slice(1)}
+                    Total Hire Cost: £${data.totalCost}
+                    Insurance Cover Included: ${insurance === 'yes' ? 'Yes' : 'No'}
+                    Discounts Applied: ${discountsText || 'None'}
+
+                    Thank you for choosing Fordham Vehicle Hire!
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error generating quote');
             }
         }
     </script>

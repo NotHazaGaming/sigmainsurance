@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Fordham Vehicle Hire</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         :root {
             --primary-color: #007bff;
@@ -265,6 +266,153 @@
 
             .form-container {
                 padding: 1rem;
+            }
+        }
+
+        /* Mobile-specific styles */
+        @media screen and (max-width: 768px) {
+            body {
+                padding-top: 60px;
+            }
+
+            .navbar {
+                padding: 0.8rem;
+            }
+
+            .navbar h1 {
+                font-size: 1.2rem;
+            }
+
+            .nav-buttons {
+                display: flex;
+                gap: 0.5rem;
+            }
+
+            .nav-button {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+                margin-left: 0.5rem;
+            }
+
+            .form-container {
+                padding: 1rem;
+                margin: 1rem;
+                border-radius: 10px;
+            }
+
+            .welcome-message {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .welcome-message h2 {
+                font-size: 1.5rem;
+            }
+
+            .benefits-message {
+                padding: 1rem;
+                margin: 1rem 0;
+            }
+
+            .benefits-message ul {
+                padding-left: 0;
+            }
+
+            .benefits-message li {
+                font-size: 0.9rem;
+                margin: 0.3rem 0;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+            }
+
+            label {
+                font-size: 0.9rem;
+            }
+
+            input, select {
+                padding: 0.6rem;
+                font-size: 1rem;
+            }
+
+            button {
+                width: 100%;
+                padding: 0.8rem;
+                margin: 0.5rem 0;
+            }
+
+            #result {
+                font-size: 0.9rem;
+                padding: 1rem;
+                margin: 1rem 0;
+            }
+
+            /* Modal adjustments for mobile */
+            .modal-content {
+                width: 95%;
+                margin: 20px auto;
+                padding: 1.5rem;
+            }
+
+            /* Make forms more touch-friendly */
+            input, select, button {
+                min-height: 44px; /* Apple's recommended minimum touch target size */
+            }
+
+            /* Adjust spacing for better touch targets */
+            .form-group + .form-group {
+                margin-top: 1.5rem;
+            }
+
+            /* Better spacing for error messages */
+            .message {
+                margin: 1rem 0;
+                padding: 0.8rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Small phones */
+        @media screen and (max-width: 375px) {
+            .navbar h1 {
+                font-size: 1rem;
+            }
+
+            .nav-button {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.8rem;
+            }
+
+            .welcome-message h2 {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Landscape orientation */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding-top: 50px;
+            }
+
+            .form-container {
+                padding: 0.8rem;
+            }
+
+            .welcome-message {
+                padding: 0.8rem;
+            }
+
+            .form-group {
+                margin-bottom: 0.8rem;
+            }
+        }
+
+        /* High-DPI screens */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            body {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
             }
         }
     </style>

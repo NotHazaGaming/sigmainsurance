@@ -627,6 +627,57 @@
             25% { transform: translateX(-10px); }
             75% { transform: translateX(10px); }
         }
+
+        /* Enhanced Input Styling */
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .form-group input:hover {
+            border-color: #b0b0b0;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        /* Password Match Styling */
+        #confirmPassword {
+            border: 2px solid #e0e0e0;
+        }
+
+        .password-mismatch {
+            border-color: var(--error-color) !important;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Input placeholder styling */
+        .form-group input::placeholder {
+            color: #aaa;
+            opacity: 0.7;
+        }
+
+        /* Label animation */
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus + label {
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -663,16 +714,16 @@
         <div class="modal-content">
             <h2>Sign Up</h2>
             <div class="form-group">
-                <label for="regEmail">Email:</label>
-                <input type="email" id="regEmail" required>
+                <label for="regEmail">Email</label>
+                <input type="email" id="regEmail" placeholder="Enter your email" required>
             </div>
             <div class="form-group">
-                <label for="regPassword">Password:</label>
-                <input type="password" id="regPassword" required>
+                <label for="regPassword">Password</label>
+                <input type="password" id="regPassword" placeholder="Enter your password" required>
             </div>
             <div class="form-group">
-                <label for="confirmPassword">Confirm Password:</label>
-                <input type="password" id="confirmPassword" required>
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
             </div>
             <div id="regMessage"></div>
             <button onclick="register()">Sign Up</button>
@@ -780,18 +831,34 @@
             }, 300);
         }
 
+        // Add real-time password matching check
+        document.getElementById('confirmPassword').addEventListener('input', function() {
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = this.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                this.classList.add('password-mismatch');
+            } else {
+                this.classList.remove('password-mismatch');
+            }
+        });
+
         async function register() {
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const messageDiv = document.getElementById('regMessage');
+            const confirmInput = document.getElementById('confirmPassword');
             
             // Check if passwords match
             if (password !== confirmPassword) {
                 messageDiv.className = 'message error';
                 messageDiv.textContent = 'Passwords do not match';
+                confirmInput.classList.add('password-mismatch');
                 return;
             }
+
+            confirmInput.classList.remove('password-mismatch');
 
             // Check password requirements
             const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;

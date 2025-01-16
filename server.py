@@ -1,51 +1,47 @@
 from flask import Flask, request, jsonify
-import json
 import os
-import re
+import json
+from datetime import datetime
 
 app = Flask(__name__)
 
-# File to store users
+# File paths
 USERS_FILE = 'users.json'
+BACKUP_DIR = 'backups'
 
-# Validation patterns
-EMAIL_PATTERN = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-PASSWORD_LENGTH = 8
-PASSWORD_PATTERN = r'^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$'
+# Ensure backup directory exists
+if not os.path.exists(BACKUP_DIR):
+    os.makedirs(BACKUP_DIR)
 
-# Initialize empty users file if it doesn't exist
+def backup_users():
+    """Backup users before each deployment"""
+    if os.path.exists(USERS_FILE):
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_file = f'{BACKUP_DIR}/users_backup_{timestamp}.json'
+        with open(USERS_FILE, 'r') as source:
+            users = json.load(source)
+            with open(backup_file, 'w') as target:
+                json.dump(users, target, indent=2)
+        return users
+    return {}
+
+def restore_users():
+    """Restore users from most recent backup"""
+    backup_files = [f for f in os.listdir(BACKUP_DIR) if f.startswith('users_backup_')]
+    if backup_files:
+        latest_backup = max(backup_files)
+        with open(f'{BACKUP_DIR}/{latest_backup}', 'r') as f:
+            users = json.load(f)
+            with open(USERS_FILE, 'w') as target:
+                json.dump(users, target, indent=2)
+            return users
+    return {}
+
+# Initialize or restore users
 if not os.path.exists(USERS_FILE):
-    with open(USERS_FILE, 'w') as f:
-        json.dump({}, f)
-
-def load_users():
-    try:
-        with open(USERS_FILE, 'r') as f:
-            return json.load(f)
-    except:
-        return {}
-
-def save_users(users):
+    users = restore_users()
     with open(USERS_FILE, 'w') as f:
         json.dump(users, f, indent=2)
-
-def is_valid_email(email):
-    return re.match(EMAIL_PATTERN, email) is not None
-
-def is_valid_password(password):
-    if len(password) < PASSWORD_LENGTH:
-        return False, "Password must be at least 8 characters long"
-    
-    if not re.search(r'[A-Z]', password):
-        return False, "Password must contain at least one uppercase letter"
-    
-    if not re.search(r'\d', password):
-        return False, "Password must contain at least one number"
-    
-    if not re.search(r'[@$!%*#?&]', password):
-        return False, "Password must contain at least one special character (@$!%*#?&)"
-    
-    return True, "Password is valid"
 
 @app.route('/')
 def home():
@@ -59,32 +55,22 @@ def register():
         email = data.get('email')
         password = data.get('password')
         
-        if not email or not password:
-            return jsonify({'success': False, 'message': 'Email and password required'})
-
-        # Validate email format
-        if not is_valid_email(email):
-            return jsonify({'success': False, 'message': 'Invalid email format. Please use a valid email address'})
-
-        # Validate password
-        is_valid, password_message = is_valid_password(password)
-        if not is_valid:
-            return jsonify({'success': False, 'message': password_message})
-
-        # Load existing users
-        users = load_users()
+        with open(USERS_FILE, 'r') as f:
+            users = json.load(f)
         
         if email in users:
             return jsonify({'success': False, 'message': 'Email already registered'})
         
-        # Add new user
         users[email] = {
             'password': password,
             'loyalty_card': 'bronze'
         }
         
-        # Save updated users
-        save_users(users)
+        with open(USERS_FILE, 'w') as f:
+            json.dump(users, f, indent=2)
+        
+        # Create backup after registration
+        backup_users()
         
         return jsonify({'success': True, 'message': 'Registration successful'})
     except Exception as e:

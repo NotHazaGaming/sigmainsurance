@@ -2,3 +2,6 @@ venv/
 __pycache__/
 *.pyc
 .env
+# Ignore everything in backups except .gitkeep
+backups/*
+!backups/.gitkeep

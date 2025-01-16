@@ -415,6 +415,135 @@
                 -moz-osx-font-smoothing: grayscale;
             }
         }
+
+        /* Enhanced Select Dropdowns */
+        .select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .custom-select {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .custom-select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .custom-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.2);
+            outline: none;
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            font-size: 0.8em;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-color);
+            pointer-events: none;
+            transition: transform 0.3s ease;
+        }
+
+        .select-wrapper:hover::after {
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        /* Animated Form Groups */
+        .form-group {
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Enhanced Labels */
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #444;
+            font-weight: 500;
+            transform: translateX(-10px);
+            opacity: 0;
+            animation: slideRight 0.5s ease forwards;
+        }
+
+        @keyframes slideRight {
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Quote Button Animation */
+        .quote-btn {
+            background: linear-gradient(45deg, var(--primary-color), #0056b3);
+            border: none;
+            padding: 12px 24px;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: scale(1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .quote-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .quote-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Result Animation */
+        #result {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        #result.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Loading Animation */
+        .loading-dots:after {
+            content: '.';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80%, 100% { content: ''; }
+        }
     </style>
 </head>
 <body>
@@ -482,39 +611,45 @@
         </div>
 
         <div class="form-group">
-            <label for="vehicleType">Vehicle Type:</label>
-            <select id="vehicleType">
-                <option value="S">Saloon</option>
-                <option value="HP">High Performance</option>
-                <option value="V">Van</option>
-            </select>
+            <label for="vehicleType">Vehicle Type</label>
+            <div class="select-wrapper">
+                <select id="vehicleType" class="custom-select">
+                    <option value="S">Saloon</option>
+                    <option value="HP">High Performance</option>
+                    <option value="V">Van</option>
+                </select>
+            </div>
         </div>
 
         <div class="form-group">
-            <label for="days">Number of Days:</label>
-            <select id="days">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-            </select>
+            <label for="days">Number of Days</label>
+            <div class="select-wrapper">
+                <select id="days" class="custom-select">
+                    <option value="1">1 Day</option>
+                    <option value="2">2 Days</option>
+                    <option value="3">3 Days</option>
+                    <option value="4">4 Days</option>
+                    <option value="5">5 Days</option>
+                    <option value="6">6 Days</option>
+                    <option value="7">7 Days</option>
+                    <option value="8">8 Days</option>
+                    <option value="9">9 Days</option>
+                    <option value="10">10 Days</option>
+                </select>
+            </div>
         </div>
 
         <div class="form-group">
-            <label for="insurance">Insurance Required:</label>
-            <select id="insurance">
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-            </select>
+            <label for="insurance">Insurance Required</label>
+            <div class="select-wrapper">
+                <select id="insurance" class="custom-select">
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
         </div>
 
-        <button onclick="generateQuote()">Generate Quote</button>
+        <button onclick="generateQuote()" class="quote-btn">Generate Quote</button>
         <div id="result"></div>
     </div>
 
@@ -676,6 +811,13 @@
         }
 
         async function generateQuote() {
+            const quoteButton = document.querySelector('.quote-btn');
+            const resultDiv = document.getElementById('result');
+            
+            // Add loading state
+            quoteButton.innerHTML = 'Generating<span class="loading-dots"></span>';
+            quoteButton.disabled = true;
+            
             const vehicleType = document.getElementById('vehicleType').value;
             const days = document.getElementById('days').value;
             const insurance = document.getElementById('insurance').value;
@@ -696,7 +838,6 @@
                 });
 
                 const data = await response.json();
-                const resultDiv = document.getElementById('result');
                 
                 let discountsText = data.discounts
                     .filter(d => d)
@@ -724,6 +865,11 @@
                 console.error('Error:', error);
                 alert('Error generating quote');
             }
+            
+            // After quote is generated
+            resultDiv.classList.add('visible');
+            quoteButton.innerHTML = 'Generate Quote';
+            quoteButton.disabled = false;
         }
     </script>
 </body>

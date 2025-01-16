@@ -3,249 +3,168 @@
 <head>
     <title>Fordham Vehicle Hire</title>
     <style>
-        :root {
-            --primary-color: #007bff;
-            --hover-color: #0056b3;
-            --success-color: #28a745;
-            --error-color: #dc3545;
-            --transition-speed: 0.3s;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            padding-top: 70px; /* Space for fixed navbar */
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #007bff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .navbar h1 {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-button {
+            padding: 0.5rem 1rem;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            background: white;
+            color: #007bff;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1001;
+        }
+
+        .modal-content {
+            position: relative;
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        /* Form Styles */
+        .form-container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-            line-height: 1.6;
-        }
-
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-
-        h2 {
-            color: #34495e;
-            margin-bottom: 20px;
+            padding: 2rem;
         }
 
         .form-group {
-            margin-bottom: 20px;
-            position: relative;
+            margin-bottom: 1rem;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
-            color: #2c3e50;
-            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #333;
         }
 
-        select, input {
-            padding: 12px;
+        input, select {
             width: 100%;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all var(--transition-speed) ease;
-            background-color: white;
-        }
-
-        select:hover, input:hover {
-            border-color: var(--primary-color);
-        }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
         }
 
         button {
-            padding: 12px 24px;
-            background-color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            background: #007bff;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             cursor: pointer;
-            margin-right: 10px;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all var(--transition-speed) ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background 0.3s ease;
         }
 
         button:hover {
-            background-color: var(--hover-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: #0056b3;
         }
 
         #result {
-            margin-top: 30px;
-            padding: 20px;
-            border: none;
-            border-radius: 12px;
-            background-color: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
             white-space: pre-line;
-            transition: all var(--transition-speed) ease;
         }
 
-        .auth-forms {
-            margin-bottom: 30px;
-            padding: 30px;
-            border-radius: 12px;
-            background-color: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all var(--transition-speed) ease;
+        .error {
+            color: #dc3545;
+            margin-top: 0.5rem;
+        }
+
+        .success {
+            color: #28a745;
+            margin-top: 0.5rem;
         }
 
         .hidden {
             display: none;
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-
-        .visible {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-            transition: opacity var(--transition-speed) ease,
-                        transform var(--transition-speed) ease;
-        }
-
-        .error {
-            color: var(--error-color);
-            margin-top: 8px;
-            padding: 10px;
-            border-radius: 6px;
-            background-color: rgba(220,53,69,0.1);
-            transition: all var(--transition-speed) ease;
-        }
-
-        .success {
-            color: var(--success-color);
-            margin-top: 8px;
-            padding: 10px;
-            border-radius: 6px;
-            background-color: rgba(40,167,69,0.1);
-            transition: all var(--transition-speed) ease;
-        }
-
-        #quoteForm {
-            background-color: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .logout-button {
-            background-color: #6c757d;
-        }
-
-        .logout-button:hover {
-            background-color: #5a6268;
-        }
-
-        /* Animation classes */
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Loading spinner */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-            margin-left: 10px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Tooltip styles */
-        .tooltip {
-            position: relative;
-        }
-
-        .tooltip:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 8px;
-            background-color: #333;
-            color: white;
-            border-radius: 4px;
-            font-size: 14px;
-            white-space: nowrap;
-            z-index: 1;
         }
     </style>
 </head>
 <body>
-    <h1>Fordham Vehicle Hire Quote Generator</h1>
-    
-    <!-- Authentication Section -->
-    <div class="auth-forms">
-        <div id="customerTypeSelection">
-            <h2>Select Customer Type</h2>
-            <button onclick="showForm('new')">New Customer</button>
-            <button onclick="showForm('existing')">Existing Customer</button>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <h1>Fordham Vehicle Hire</h1>
+        <div class="nav-buttons">
+            <button class="nav-button" onclick="showModal('loginModal')">Log In</button>
+            <button class="nav-button" onclick="showModal('signupModal')">Sign Up</button>
+            <button id="logoutButton" class="nav-button hidden" onclick="logout()">Log Out</button>
         </div>
+    </nav>
 
-        <!-- Registration Form -->
-        <div id="registrationForm" class="hidden">
-            <h2>New Customer Registration</h2>
-            <div class="form-group">
-                <label for="regEmail">Email:</label>
-                <input type="email" id="regEmail">
-            </div>
-            <div class="form-group">
-                <label for="regPassword">Password:</label>
-                <input type="password" id="regPassword">
-            </div>
-            <button onclick="register()">Register</button>
-            <button onclick="showForm('select')">Back</button>
-            <div id="regMessage"></div>
-        </div>
-
-        <!-- Login Form -->
-        <div id="loginForm" class="hidden">
-            <h2>Existing Customer Login</h2>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideModal('loginModal')">&times;</span>
+            <h2>Login</h2>
             <div class="form-group">
                 <label for="loginEmail">Email:</label>
                 <input type="email" id="loginEmail">
@@ -255,13 +174,32 @@
                 <input type="password" id="loginPassword">
             </div>
             <button onclick="login()">Login</button>
-            <button onclick="showForm('select')">Back</button>
             <div id="loginMessage"></div>
         </div>
     </div>
 
-    <!-- Quote Form (Initially Hidden) -->
-    <div id="quoteForm" class="hidden">
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideModal('signupModal')">&times;</span>
+            <h2>Sign Up</h2>
+            <div class="form-group">
+                <label for="regEmail">Email:</label>
+                <input type="email" id="regEmail">
+            </div>
+            <div class="form-group">
+                <label for="regPassword">Password:</label>
+                <input type="password" id="regPassword">
+                <small>Password must contain at least 8 characters, one uppercase letter, one number, and one special character.</small>
+            </div>
+            <button onclick="register()">Sign Up</button>
+            <div id="regMessage"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="form-container hidden" id="quoteForm">
+        <h2>Generate Quote</h2>
         <div class="form-group">
             <label for="vehicleType">Vehicle Type:</label>
             <select id="vehicleType">
@@ -296,49 +234,29 @@
         </div>
 
         <button onclick="generateQuote()">Generate Quote</button>
-        <button onclick="logout()">Logout</button>
+        <div id="result"></div>
     </div>
-
-    <div id="result"></div>
 
     <script>
         let currentUser = null;
         let userLoyaltyCard = null;
 
-        function setLoading(button, isLoading) {
-            if (isLoading) {
-                button.disabled = true;
-                button.innerHTML += '<span class="loading"></span>';
-            } else {
-                button.disabled = false;
-                button.innerHTML = button.innerHTML.replace('<span class="loading"></span>', '');
-            }
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
         }
 
-        function showForm(type) {
-            const forms = {
-                'select': document.getElementById('customerTypeSelection'),
-                'new': document.getElementById('registrationForm'),
-                'existing': document.getElementById('loginForm'),
-                'quote': document.getElementById('quoteForm')
-            };
+        function hideModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
 
-            Object.values(forms).forEach(form => {
-                form.classList.add('hidden');
-                form.classList.remove('visible');
-            });
-
-            if (forms[type]) {
-                forms[type].classList.remove('hidden');
-                setTimeout(() => {
-                    forms[type].classList.add('visible');
-                }, 50);
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
             }
         }
 
         async function register() {
-            const button = document.querySelector('#registrationForm button');
-            setLoading(button, true);
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const messageDiv = document.getElementById('regMessage');
@@ -357,10 +275,10 @@
                     messageDiv.className = 'success';
                     messageDiv.textContent = data.message;
                     currentUser = email;
-                    userLoyaltyCard = 'bronze'; // New users start with bronze
+                    userLoyaltyCard = 'bronze';
                     setTimeout(() => {
-                        document.getElementById('quoteForm').classList.remove('hidden');
-                        document.getElementById('registrationForm').classList.add('hidden');
+                        hideModal('signupModal');
+                        updateUIForLoggedInUser();
                     }, 1000);
                 } else {
                     messageDiv.className = 'error';
@@ -370,12 +288,9 @@
                 messageDiv.className = 'error';
                 messageDiv.textContent = 'Registration failed. Please try again.';
             }
-            setLoading(button, false);
         }
 
         async function login() {
-            const button = document.querySelector('#loginForm button');
-            setLoading(button, true);
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             const messageDiv = document.getElementById('loginMessage');
@@ -396,31 +311,35 @@
                     currentUser = email;
                     userLoyaltyCard = data.loyalty_card;
                     setTimeout(() => {
-                        document.getElementById('quoteForm').classList.remove('hidden');
-                        document.getElementById('loginForm').classList.add('hidden');
+                        hideModal('loginModal');
+                        updateUIForLoggedInUser();
                     }, 1000);
                 } else {
                     messageDiv.className = 'error';
-                    messageDiv.textContent = 'Invalid email or password';
+                    messageDiv.textContent = data.message || 'Invalid email or password';
                 }
             } catch (error) {
                 messageDiv.className = 'error';
                 messageDiv.textContent = 'Login failed. Please try again.';
             }
-            setLoading(button, false);
+        }
+
+        function updateUIForLoggedInUser() {
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.add('hidden'));
+            document.getElementById('logoutButton').classList.remove('hidden');
+            document.getElementById('quoteForm').classList.remove('hidden');
         }
 
         function logout() {
             currentUser = null;
             userLoyaltyCard = null;
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('hidden'));
+            document.getElementById('logoutButton').classList.add('hidden');
             document.getElementById('quoteForm').classList.add('hidden');
             document.getElementById('result').textContent = '';
-            showForm('select');
         }
 
         async function generateQuote() {
-            const button = document.querySelector('#quoteForm button');
-            setLoading(button, true);
             if (!currentUser) {
                 alert('Please login or register first');
                 return;
@@ -468,7 +387,6 @@
                 console.error('Error:', error);
                 alert('Error generating quote');
             }
-            setLoading(button, false);
         }
     </script>
 </body>

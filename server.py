@@ -1,9 +1,27 @@
 from flask import Flask, request, jsonify
+import json
+import os
 
 app = Flask(__name__)
 
-# Simple in-memory storage for now
-users = {}
+# File to store users
+USERS_FILE = 'users.json'
+
+# Initialize empty users file if it doesn't exist
+if not os.path.exists(USERS_FILE):
+    with open(USERS_FILE, 'w') as f:
+        json.dump({}, f)
+
+def load_users():
+    try:
+        with open(USERS_FILE, 'r') as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_users(users):
+    with open(USERS_FILE, 'w') as f:
+        json.dump(users, f, indent=2)
 
 @app.route('/')
 def home():
@@ -20,13 +38,20 @@ def register():
         if not email or not password:
             return jsonify({'success': False, 'message': 'Email and password required'})
 
+        # Load existing users
+        users = load_users()
+        
         if email in users:
             return jsonify({'success': False, 'message': 'Email already registered'})
         
+        # Add new user
         users[email] = {
             'password': password,
             'loyalty_card': 'bronze'
         }
+        
+        # Save updated users
+        save_users(users)
         
         return jsonify({'success': True, 'message': 'Registration successful'})
     except Exception as e:
@@ -39,6 +64,9 @@ def login():
         data = request.json
         email = data.get('email')
         password = data.get('password')
+
+        # Load users
+        users = load_users()
 
         if email in users and users[email]['password'] == password:
             return jsonify({
@@ -85,6 +113,12 @@ def calculate_hire():
             "£18 discount for Gold loyalty card" if loyalty_card == 'gold' and vehicle_type == 'HP' else None
         ]
     })
+
+# Admin route to view users (remove in production)
+@app.route('/admin/users')
+def view_users():
+    users = load_users()
+    return jsonify(users)
 
 if __name__ == '__main__':
     app.run()

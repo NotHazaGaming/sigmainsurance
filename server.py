@@ -1,8 +1,37 @@
 from flask import Flask, request, jsonify
-import json
+import psycopg2
 import os
+import json
 
 app = Flask(__name__)
+
+# Database connection
+def get_db_connection():
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url and database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    return psycopg2.connect(database_url)
+
+# Initialize database
+def init_db():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS users
+            (email TEXT PRIMARY KEY,
+             password TEXT,
+             loyalty_card TEXT)
+        ''')
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("Database initialized successfully")
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+
+# Initialize database on startup
+init_db()
 
 # File to store user credentials
 USERS_FILE = 'users.json'
@@ -24,17 +53,6 @@ def save_user(email, password):
         print(f"Error saving user: {e}")
         return False
 
-def check_user(email, password):
-    try:
-        with open(USERS_FILE, 'r') as f:
-            users = json.load(f)
-        if email in users and users[email]['password'] == password:
-            return {'valid': True, 'loyalty_card': users[email]['loyalty_card']}
-        return {'valid': False}
-    except Exception as e:
-        print(f"Error checking user: {e}")
-        return {'valid': False}
-
 @app.route('/')
 def home():
     with open('index.html', 'r') as f:
@@ -42,25 +60,59 @@ def home():
 
 @app.route('/register', methods=['POST'])
 def register():
-    data = request.json
-    email = data.get('email')
-    password = data.get('password')
-    
-    # Check if user already exists
-    with open(USERS_FILE, 'r') as f:
-        users = json.load(f)
-    if email in users:
-        return jsonify({'success': False, 'message': 'Email already registered'})
-    
-    if save_user(email, password):
+    try:
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({'success': False, 'message': 'Email and password required'})
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Check if user exists
+        cur.execute('SELECT email FROM users WHERE email = %s', (email,))
+        if cur.fetchone():
+            cur.close()
+            conn.close()
+            return jsonify({'success': False, 'message': 'Email already registered'})
+        
+        # Create new user
+        cur.execute(
+            'INSERT INTO users (email, password, loyalty_card) VALUES (%s, %s, %s)',
+            (email, password, 'bronze')
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        
         return jsonify({'success': True, 'message': 'Registration successful'})
-    return jsonify({'success': False, 'message': 'Registration failed'})
+    except Exception as e:
+        print(f"Registration error: {str(e)}")
+        return jsonify({'success': False, 'message': f'Registration error: {str(e)}'})
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.json
-    result = check_user(data.get('email'), data.get('password'))
-    return jsonify(result)
+    try:
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT loyalty_card FROM users WHERE email = %s AND password = %s', 
+                   (email, password))
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if result:
+            return jsonify({'valid': True, 'loyalty_card': result[0]})
+        return jsonify({'valid': False})
+    except Exception as e:
+        print(f"Login error: {str(e)}")
+        return jsonify({'valid': False})
 
 @app.route('/calculate-hire', methods=['POST'])
 def calculate_hire():
@@ -69,7 +121,6 @@ def calculate_hire():
     days = int(data.get('days', 0))
     insurance = data.get('insurance')
     loyalty_card = data.get('loyaltyCard')
-    email = data.get('email')
 
     # Daily charges
     daily_charges = {'S': 22.50, 'HP': 28.00, 'V': 35.00}

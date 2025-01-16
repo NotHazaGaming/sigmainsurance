@@ -545,7 +545,28 @@
             80%, 100% { content: ''; }
         }
 
-        /* Update Loading Bar Animation */
+        /* Loading Bar Container */
+        .loading-container {
+            display: none;
+            width: 100%;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .loading-container.visible {
+            display: block;
+        }
+
+        /* Loading Bar */
+        .loading-bar {
+            width: 100%;
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
         .loading-bar::after {
             content: '';
             position: absolute;
@@ -554,30 +575,37 @@
             height: 100%;
             width: 0;
             background: linear-gradient(90deg, var(--primary-color), #00d4ff);
-            animation: loading 5s ease forwards; /* Changed from 2s to 5s */
+            animation: loading 2s ease forwards;
             box-shadow: 0 0 10px rgba(0,123,255,0.5);
         }
 
-        /* Update Loading Text Animation */
+        /* Loading Text */
         .loading-text {
             margin-top: 10px;
             color: var(--primary-color);
             font-size: 0.9rem;
             opacity: 0;
-            animation: fadeInOut 5s ease infinite; /* Changed from 2s to 5s */
+            animation: fadeInOut 2s ease infinite;
         }
 
-        /* Add different loading messages */
-        .loading-text:after {
-            content: 'Calculating your perfect quote...';
-            animation: loadingText 5s linear infinite;
+        /* Loading Animations */
+        @keyframes loading {
+            0% {
+                width: 0;
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                width: 100%;
+                opacity: 1;
+            }
         }
 
-        @keyframes loadingText {
-            0% { content: 'Calculating your perfect quote...'; }
-            25% { content: 'Checking available vehicles...'; }
-            50% { content: 'Applying any eligible discounts...'; }
-            75% { content: 'Finalizing your quote...'; }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
         }
     </style>
 </head>
@@ -686,6 +714,12 @@
 
         <button onclick="generateQuote()" class="quote-btn">Generate Quote</button>
         <div id="result"></div>
+    </div>
+
+    <!-- Loading Container -->
+    <div class="loading-container" id="loadingContainer">
+        <div class="loading-bar"></div>
+        <div class="loading-text">Calculating your perfect quote...</div>
     </div>
 
     <script>
@@ -858,8 +892,8 @@
             quoteButton.disabled = true;
             loadingContainer.classList.add('visible');
             
-            // Force a 5-second delay for the loading animation
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            // Force a delay for the loading animation
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
             try {
                 const vehicleType = document.getElementById('vehicleType').value;
@@ -899,16 +933,16 @@
                     Thank you for choosing Fordham Vehicle Hire!
                 `;
 
-                if (!currentUser) {
-                    quoteText += '\n\nSign up or log in to save this quote and get loyalty card benefits!';
-                }
-
+                // Hide loading and show result
+                loadingContainer.classList.remove('visible');
                 resultDiv.textContent = quoteText;
+                resultDiv.classList.add('visible');
+                
             } catch (error) {
                 console.error('Error:', error);
                 resultDiv.textContent = 'Error generating quote. Please try again.';
+                resultDiv.classList.add('visible');
             } finally {
-                loadingContainer.classList.remove('visible');
                 quoteButton.disabled = false;
             }
         }

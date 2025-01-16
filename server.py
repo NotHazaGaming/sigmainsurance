@@ -1,11 +1,17 @@
 from flask import Flask, request, jsonify
 import json
 import os
+import re
 
 app = Flask(__name__)
 
 # File to store users
 USERS_FILE = 'users.json'
+
+# Validation patterns
+EMAIL_PATTERN = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+PASSWORD_LENGTH = 8
+PASSWORD_PATTERN = r'^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$'
 
 # Initialize empty users file if it doesn't exist
 if not os.path.exists(USERS_FILE):
@@ -23,6 +29,24 @@ def save_users(users):
     with open(USERS_FILE, 'w') as f:
         json.dump(users, f, indent=2)
 
+def is_valid_email(email):
+    return re.match(EMAIL_PATTERN, email) is not None
+
+def is_valid_password(password):
+    if len(password) < PASSWORD_LENGTH:
+        return False, "Password must be at least 8 characters long"
+    
+    if not re.search(r'[A-Z]', password):
+        return False, "Password must contain at least one uppercase letter"
+    
+    if not re.search(r'\d', password):
+        return False, "Password must contain at least one number"
+    
+    if not re.search(r'[@$!%*#?&]', password):
+        return False, "Password must contain at least one special character (@$!%*#?&)"
+    
+    return True, "Password is valid"
+
 @app.route('/')
 def home():
     with open('index.html', 'r') as f:
@@ -37,6 +61,15 @@ def register():
         
         if not email or not password:
             return jsonify({'success': False, 'message': 'Email and password required'})
+
+        # Validate email format
+        if not is_valid_email(email):
+            return jsonify({'success': False, 'message': 'Invalid email format. Please use a valid email address'})
+
+        # Validate password
+        is_valid, password_message = is_valid_password(password)
+        if not is_valid:
+            return jsonify({'success': False, 'message': password_message})
 
         # Load existing users
         users = load_users()
@@ -65,6 +98,10 @@ def login():
         email = data.get('email')
         password = data.get('password')
 
+        # Validate email format
+        if not is_valid_email(email):
+            return jsonify({'valid': False, 'message': 'Invalid email format'})
+
         # Load users
         users = load_users()
 
@@ -73,10 +110,10 @@ def login():
                 'valid': True, 
                 'loyalty_card': users[email]['loyalty_card']
             })
-        return jsonify({'valid': False})
+        return jsonify({'valid': False, 'message': 'Invalid email or password'})
     except Exception as e:
         print(f"Login error: {str(e)}")
-        return jsonify({'valid': False})
+        return jsonify({'valid': False, 'message': 'Login failed'})
 
 @app.route('/calculate-hire', methods=['POST'])
 def calculate_hire():

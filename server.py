@@ -121,7 +121,7 @@ def calculate_hire():
     vehicle_type = data.get('vehicleType')
     days = int(data.get('days', 0))
     insurance = data.get('insurance')
-    loyalty_card = data.get('loyaltyCard')
+    loyalty_card = data.get('loyaltyCard', None)  # Optional now
 
     # Daily charges
     daily_charges = {'S': 22.50, 'HP': 28.00, 'V': 35.00}
@@ -130,11 +130,12 @@ def calculate_hire():
     # Calculate total cost
     total_cost = daily_charge * days
 
-    # Apply discounts
-    if days > 7:
-        total_cost *= 0.9  # 10% discount
-    if loyalty_card == 'gold' and vehicle_type == 'HP':
-        total_cost -= 18.00
+    # Apply discounts only for logged-in users with loyalty cards
+    if loyalty_card:
+        if days > 7:
+            total_cost *= 0.9  # 10% discount
+        if loyalty_card == 'gold' and vehicle_type == 'HP':
+            total_cost -= 18.00
 
     # Add insurance if required
     if insurance == 'yes':
@@ -146,7 +147,7 @@ def calculate_hire():
     return jsonify({
         'totalCost': round(total_cost, 2),
         'discounts': [
-            "10% discount for hire period over 7 days" if days > 7 else None,
+            "10% discount for hire period over 7 days" if days > 7 and loyalty_card else None,
             "£18 discount for Gold loyalty card" if loyalty_card == 'gold' and vehicle_type == 'HP' else None
         ]
     })

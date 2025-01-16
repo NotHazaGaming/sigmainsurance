@@ -154,6 +154,7 @@
     <nav class="navbar">
         <h1>Fordham Vehicle Hire</h1>
         <div class="nav-buttons">
+            <button class="nav-button" onclick="showQuoteForm()">Get Quote</button>
             <button class="nav-button" onclick="showModal('loginModal')">Log In</button>
             <button class="nav-button" onclick="showModal('signupModal')">Sign Up</button>
             <button id="logoutButton" class="nav-button hidden" onclick="logout()">Log Out</button>
@@ -339,12 +340,12 @@
             document.getElementById('result').textContent = '';
         }
 
-        async function generateQuote() {
-            if (!currentUser) {
-                alert('Please login or register first');
-                return;
-            }
+        // Show quote form without requiring login
+        function showQuoteForm() {
+            document.getElementById('quoteForm').classList.remove('hidden');
+        }
 
+        async function generateQuote() {
             const vehicleType = document.getElementById('vehicleType').value;
             const days = document.getElementById('days').value;
             const insurance = document.getElementById('insurance').value;
@@ -371,18 +372,24 @@
                     .filter(d => d)
                     .join('\n');
 
-                resultDiv.textContent = `
+                let quoteText = `
                     ---- Vehicle Hire Quote ----
                     Vehicle Type: ${vehicleType === 'S' ? 'Saloon' : vehicleType === 'HP' ? 'High Performance' : 'Van'}
                     Number of Days Hired: ${days}
-                    Customer Type: ${userLoyaltyCard ? 'Existing' : 'New'}
-                    Loyalty Card: ${userLoyaltyCard || 'None'}
+                    ${currentUser ? `Customer Type: ${userLoyaltyCard ? 'Existing' : 'New'}
+                    Loyalty Card: ${userLoyaltyCard || 'None'}` : ''}
                     Total Hire Cost: £${data.totalCost}
                     Insurance Cover Included: ${insurance === 'yes' ? 'Yes' : 'No'}
                     Discounts Applied: ${discountsText || 'None'}
 
                     Thank you for choosing Fordham Vehicle Hire!
                 `;
+
+                if (!currentUser) {
+                    quoteText += '\n\nSign up or log in to save this quote and get loyalty card benefits!';
+                }
+
+                resultDiv.textContent = quoteText;
             } catch (error) {
                 console.error('Error:', error);
                 alert('Error generating quote');

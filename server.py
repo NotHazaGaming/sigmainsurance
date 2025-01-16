@@ -7,30 +7,32 @@ app = Flask(__name__)
 # Database connection
 def get_db_connection():
     database_url = os.environ.get('DATABASE_URL')
-    if database_url.startswith("postgres://"):
+    if database_url and database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
     return psycopg2.connect(database_url)
 
 # Initialize database
 def init_db():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS hire_quotes
-        (email TEXT PRIMARY KEY,
-         vehicle_type TEXT,
-         days INTEGER,
-         insurance TEXT,
-         loyalty_card TEXT,
-         total_cost FLOAT)
-    ''')
-    conn.commit()
-    cur.close()
-    conn.close()
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS hire_quotes
+            (email TEXT PRIMARY KEY,
+             vehicle_type TEXT,
+             days INTEGER,
+             insurance TEXT,
+             loyalty_card TEXT,
+             total_cost FLOAT)
+        ''')
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Database initialization error: {e}")
 
-@app.before_first_request
-def setup():
-    init_db()
+# Initialize database on startup
+init_db()
 
 @app.route('/')
 def home():

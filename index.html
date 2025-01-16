@@ -544,6 +544,41 @@
             60% { content: '...'; }
             80%, 100% { content: ''; }
         }
+
+        /* Update Loading Bar Animation */
+        .loading-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--primary-color), #00d4ff);
+            animation: loading 5s ease forwards; /* Changed from 2s to 5s */
+            box-shadow: 0 0 10px rgba(0,123,255,0.5);
+        }
+
+        /* Update Loading Text Animation */
+        .loading-text {
+            margin-top: 10px;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            opacity: 0;
+            animation: fadeInOut 5s ease infinite; /* Changed from 2s to 5s */
+        }
+
+        /* Add different loading messages */
+        .loading-text:after {
+            content: 'Calculating your perfect quote...';
+            animation: loadingText 5s linear infinite;
+        }
+
+        @keyframes loadingText {
+            0% { content: 'Calculating your perfect quote...'; }
+            25% { content: 'Checking available vehicles...'; }
+            50% { content: 'Applying any eligible discounts...'; }
+            75% { content: 'Finalizing your quote...'; }
+        }
     </style>
 </head>
 <body>
@@ -813,16 +848,24 @@
         async function generateQuote() {
             const quoteButton = document.querySelector('.quote-btn');
             const resultDiv = document.getElementById('result');
+            const loadingContainer = document.getElementById('loadingContainer');
             
-            // Add loading state
-            quoteButton.innerHTML = 'Generating<span class="loading-dots"></span>';
+            // Clear previous result
+            resultDiv.textContent = '';
+            resultDiv.classList.remove('visible');
+            
+            // Show loading state
             quoteButton.disabled = true;
+            loadingContainer.classList.add('visible');
             
-            const vehicleType = document.getElementById('vehicleType').value;
-            const days = document.getElementById('days').value;
-            const insurance = document.getElementById('insurance').value;
+            // Force a 5-second delay for the loading animation
+            await new Promise(resolve => setTimeout(resolve, 5000));
 
             try {
+                const vehicleType = document.getElementById('vehicleType').value;
+                const days = document.getElementById('days').value;
+                const insurance = document.getElementById('insurance').value;
+
                 const response = await fetch('/calculate-hire', {
                     method: 'POST',
                     headers: {
@@ -863,13 +906,11 @@
                 resultDiv.textContent = quoteText;
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error generating quote');
+                resultDiv.textContent = 'Error generating quote. Please try again.';
+            } finally {
+                loadingContainer.classList.remove('visible');
+                quoteButton.disabled = false;
             }
-            
-            // After quote is generated
-            resultDiv.classList.add('visible');
-            quoteButton.innerHTML = 'Generate Quote';
-            quoteButton.disabled = false;
         }
     </script>
 </body>

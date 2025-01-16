@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email System</title>
+</head>
+<body>
+    <div>
+        <h2>Email System</h2>
+        <input type="email" id="emailInput" placeholder="Enter your email">
+        <button onclick="handleEmail()">Submit</button>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        async function handleEmail() {
+            const email = document.getElementById('emailInput').value;
+            const messageElement = document.getElementById('message');
+
+            try {
+                // Check if email exists
+                const checkResponse = await fetch('/check-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+                const checkData = await checkResponse.json();
+
+                if (checkData.exists) {
+                    messageElement.textContent = 'Welcome back!';
+                    return;
+                }
+
+                // Save new email
+                const saveResponse = await fetch('/save-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+                const saveData = await saveResponse.json();
+
+                if (saveData.success) {
+                    messageElement.textContent = 'Email saved successfully!';
+                } else {
+                    messageElement.textContent = 'Error saving email.';
+                }
+            } catch (error) {
+                messageElement.textContent = 'An error occurred.';
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

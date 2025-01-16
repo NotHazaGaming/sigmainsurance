@@ -374,26 +374,42 @@
         let currentUser = null;
         let userLoyaltyCard = null;
 
+        // Hide logout button by default
+        document.getElementById('logoutButton').style.display = 'none';
+
+        // Check login status on page load
+        window.onload = function() {
+            const storedUser = localStorage.getItem('currentUser');
+            const storedCard = localStorage.getItem('userLoyaltyCard');
+            
+            if (storedUser) {
+                currentUser = storedUser;
+                userLoyaltyCard = storedCard;
+                updateUIForLoggedInUser();
+            }
+        };
+
         function showModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.classList.add('visible');
+            }, 10);
         }
 
         function hideModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            if (event.target.className === 'modal') {
-                event.target.style.display = 'none';
-            }
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('visible');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
         }
 
         async function register() {
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const messageDiv = document.getElementById('regMessage');
-
+            
             try {
                 const response = await fetch('/register', {
                     method: 'POST',
@@ -405,20 +421,25 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    messageDiv.className = 'success';
+                    messageDiv.className = 'message success';
                     messageDiv.textContent = data.message;
                     currentUser = email;
                     userLoyaltyCard = 'bronze';
+                    
+                    // Store user info
+                    localStorage.setItem('currentUser', email);
+                    localStorage.setItem('userLoyaltyCard', 'bronze');
+                    
                     setTimeout(() => {
                         hideModal('signupModal');
                         updateUIForLoggedInUser();
                     }, 1000);
                 } else {
-                    messageDiv.className = 'error';
+                    messageDiv.className = 'message error';
                     messageDiv.textContent = data.message;
                 }
             } catch (error) {
-                messageDiv.className = 'error';
+                messageDiv.className = 'message error';
                 messageDiv.textContent = 'Registration failed. Please try again.';
             }
         }
@@ -427,7 +448,7 @@
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             const messageDiv = document.getElementById('loginMessage');
-
+            
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
@@ -439,36 +460,70 @@
                 const data = await response.json();
                 
                 if (data.valid) {
-                    messageDiv.className = 'success';
+                    messageDiv.className = 'message success';
                     messageDiv.textContent = 'Login successful!';
                     currentUser = email;
                     userLoyaltyCard = data.loyalty_card;
+                    
+                    // Store user info
+                    localStorage.setItem('currentUser', email);
+                    localStorage.setItem('userLoyaltyCard', data.loyalty_card);
+                    
                     setTimeout(() => {
                         hideModal('loginModal');
                         updateUIForLoggedInUser();
                     }, 1000);
                 } else {
-                    messageDiv.className = 'error';
+                    messageDiv.className = 'message error';
                     messageDiv.textContent = data.message || 'Invalid email or password';
                 }
             } catch (error) {
-                messageDiv.className = 'error';
+                messageDiv.className = 'message error';
                 messageDiv.textContent = 'Login failed. Please try again.';
             }
         }
 
         function updateUIForLoggedInUser() {
-            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.add('hidden'));
-            document.getElementById('logoutButton').classList.remove('hidden');
-            document.getElementById('benefitsMessage').style.display = 'none';
+            // Hide login and signup buttons
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                if (btn.id === 'logoutButton') {
+                    btn.style.display = 'inline-block';
+                } else {
+                    btn.style.display = 'none';
+                }
+            });
+            
+            // Hide benefits message
+            const benefitsMessage = document.getElementById('benefitsMessage');
+            if (benefitsMessage) {
+                benefitsMessage.style.display = 'none';
+            }
         }
 
         function logout() {
             currentUser = null;
             userLoyaltyCard = null;
-            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('hidden'));
-            document.getElementById('logoutButton').classList.add('hidden');
-            document.getElementById('benefitsMessage').style.display = 'block';
+            
+            // Clear stored user info
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('userLoyaltyCard');
+            
+            // Show login/signup buttons, hide logout
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                if (btn.id === 'logoutButton') {
+                    btn.style.display = 'none';
+                } else {
+                    btn.style.display = 'inline-block';
+                }
+            });
+            
+            // Show benefits message
+            const benefitsMessage = document.getElementById('benefitsMessage');
+            if (benefitsMessage) {
+                benefitsMessage.style.display = 'block';
+            }
+            
+            // Clear any existing quote
             document.getElementById('result').textContent = '';
         }
 

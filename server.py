@@ -4,8 +4,10 @@ import os
 
 app = Flask(__name__)
 
-# File to store user credentials
-USERS_FILE = 'users.json'
+# Specify the full path for the users file
+USERS_FILE = os.path.join(os.path.dirname(__file__), 'users.json')
+
+print(f"Users file location: {USERS_FILE}")  # This will show us where the file is
 
 # Initialize users file if it doesn't exist
 if not os.path.exists(USERS_FILE):

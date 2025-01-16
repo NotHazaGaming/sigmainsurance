@@ -3,53 +3,216 @@
 <head>
     <title>Fordham Vehicle Hire</title>
     <style>
+        :root {
+            --primary-color: #007bff;
+            --hover-color: #0056b3;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --transition-speed: 0.3s;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #f8f9fa;
+            line-height: 1.6;
         }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #34495e;
+            margin-bottom: 20px;
+        }
+
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            position: relative;
         }
+
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
         }
+
         select, input {
-            padding: 8px;
-            width: 200px;
+            padding: 12px;
+            width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all var(--transition-speed) ease;
+            background-color: white;
         }
+
+        select:hover, input:hover {
+            border-color: var(--primary-color);
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+        }
+
         button {
-            padding: 10px 20px;
-            background-color: #007bff;
+            padding: 12px 24px;
+            background-color: var(--primary-color);
             color: white;
             border: none;
+            border-radius: 8px;
             cursor: pointer;
             margin-right: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
+        button:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
         #result {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            white-space: pre-line;
-        }
-        .auth-forms {
-            margin-bottom: 20px;
+            margin-top: 30px;
             padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            border: none;
+            border-radius: 12px;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            white-space: pre-line;
+            transition: all var(--transition-speed) ease;
         }
+
+        .auth-forms {
+            margin-bottom: 30px;
+            padding: 30px;
+            border-radius: 12px;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all var(--transition-speed) ease;
+        }
+
         .hidden {
             display: none;
+            opacity: 0;
+            transform: translateY(-20px);
         }
+
+        .visible {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity var(--transition-speed) ease,
+                        transform var(--transition-speed) ease;
+        }
+
         .error {
-            color: red;
-            margin-top: 5px;
+            color: var(--error-color);
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: rgba(220,53,69,0.1);
+            transition: all var(--transition-speed) ease;
         }
+
         .success {
-            color: green;
-            margin-top: 5px;
+            color: var(--success-color);
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: rgba(40,167,69,0.1);
+            transition: all var(--transition-speed) ease;
+        }
+
+        #quoteForm {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .logout-button {
+            background-color: #6c757d;
+        }
+
+        .logout-button:hover {
+            background-color: #5a6268;
+        }
+
+        /* Animation classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading spinner */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px;
+            background-color: #333;
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            z-index: 1;
         }
     </style>
 </head>
@@ -142,22 +305,40 @@
         let currentUser = null;
         let userLoyaltyCard = null;
 
-        function showForm(type) {
-            document.getElementById('customerTypeSelection').classList.add('hidden');
-            document.getElementById('registrationForm').classList.add('hidden');
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('quoteForm').classList.add('hidden');
+        function setLoading(button, isLoading) {
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML += '<span class="loading"></span>';
+            } else {
+                button.disabled = false;
+                button.innerHTML = button.innerHTML.replace('<span class="loading"></span>', '');
+            }
+        }
 
-            if (type === 'new') {
-                document.getElementById('registrationForm').classList.remove('hidden');
-            } else if (type === 'existing') {
-                document.getElementById('loginForm').classList.remove('hidden');
-            } else if (type === 'select') {
-                document.getElementById('customerTypeSelection').classList.remove('hidden');
+        function showForm(type) {
+            const forms = {
+                'select': document.getElementById('customerTypeSelection'),
+                'new': document.getElementById('registrationForm'),
+                'existing': document.getElementById('loginForm'),
+                'quote': document.getElementById('quoteForm')
+            };
+
+            Object.values(forms).forEach(form => {
+                form.classList.add('hidden');
+                form.classList.remove('visible');
+            });
+
+            if (forms[type]) {
+                forms[type].classList.remove('hidden');
+                setTimeout(() => {
+                    forms[type].classList.add('visible');
+                }, 50);
             }
         }
 
         async function register() {
+            const button = document.querySelector('#registrationForm button');
+            setLoading(button, true);
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const messageDiv = document.getElementById('regMessage');
@@ -189,9 +370,12 @@
                 messageDiv.className = 'error';
                 messageDiv.textContent = 'Registration failed. Please try again.';
             }
+            setLoading(button, false);
         }
 
         async function login() {
+            const button = document.querySelector('#loginForm button');
+            setLoading(button, true);
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             const messageDiv = document.getElementById('loginMessage');
@@ -223,6 +407,7 @@
                 messageDiv.className = 'error';
                 messageDiv.textContent = 'Login failed. Please try again.';
             }
+            setLoading(button, false);
         }
 
         function logout() {
@@ -234,6 +419,8 @@
         }
 
         async function generateQuote() {
+            const button = document.querySelector('#quoteForm button');
+            setLoading(button, true);
             if (!currentUser) {
                 alert('Please login or register first');
                 return;
@@ -281,6 +468,7 @@
                 console.error('Error:', error);
                 alert('Error generating quote');
             }
+            setLoading(button, false);
         }
     </script>
 </body>

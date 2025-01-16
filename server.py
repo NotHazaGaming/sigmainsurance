@@ -1,33 +1,40 @@
 from flask import Flask, request, jsonify
-import json
 import os
+import psycopg2
+from psycopg2.extras import DictCursor
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
-# File to store users
-USERS_FILE = 'users.json'
+# Database connection
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://postgres:password@localhost:5432/vehicle_hire')
 
-# Initialize empty users file if it doesn't exist
-if not os.path.exists(USERS_FILE):
-    with open(USERS_FILE, 'w', encoding='utf-8') as f:
-        json.dump({}, f)
+# Update URL for newer versions of psycopg2
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-def load_users():
-    try:
-        with open(USERS_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"Error loading users: {e}")
-        return {}
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL)
 
-def save_users(users):
-    try:
-        with open(USERS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(users, f, indent=2, ensure_ascii=False)
-        return True
-    except Exception as e:
-        print(f"Error saving users: {e}")
-        return False
+def init_db():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Create users table if it doesn't exist
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            email TEXT PRIMARY KEY,
+            password TEXT NOT NULL,
+            loyalty_card TEXT DEFAULT 'bronze'
+        )
+    ''')
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# Initialize database
+init_db()
 
 @app.route('/')
 def home():
@@ -44,19 +51,27 @@ def register():
         if not email or not password:
             return jsonify({'success': False, 'message': 'Email and password required'})
 
-        users = load_users()
+        conn = get_db_connection()
+        cur = conn.cursor()
         
-        if email in users:
+        # Check if user exists
+        cur.execute('SELECT email FROM users WHERE email = %s', (email,))
+        if cur.fetchone():
+            cur.close()
+            conn.close()
             return jsonify({'success': False, 'message': 'Email already registered'})
         
-        users[email] = {
-            'password': password,
-            'loyalty_card': 'bronze'
-        }
+        # Insert new user
+        cur.execute(
+            'INSERT INTO users (email, password, loyalty_card) VALUES (%s, %s, %s)',
+            (email, password, 'bronze')
+        )
         
-        if save_users(users):
-            return jsonify({'success': True, 'message': 'Registration successful'})
-        return jsonify({'success': False, 'message': 'Error saving user data'})
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Registration successful'})
     except Exception as e:
         print(f"Registration error: {str(e)}")
         return jsonify({'success': False, 'message': f'Registration error: {str(e)}'})
@@ -68,17 +83,24 @@ def login():
         email = data.get('email')
         password = data.get('password')
 
-        users = load_users()
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=DictCursor)
+        
+        cur.execute('SELECT * FROM users WHERE email = %s AND password = %s', (email, password))
+        user = cur.fetchone()
+        
+        cur.close()
+        conn.close()
 
-        if email in users and users[email]['password'] == password:
+        if user:
             return jsonify({
-                'valid': True, 
-                'loyalty_card': users[email]['loyalty_card']
+                'valid': True,
+                'loyalty_card': user['loyalty_card']
             })
-        return jsonify({'valid': False})
+        return jsonify({'valid': False, 'message': 'Invalid email or password'})
     except Exception as e:
         print(f"Login error: {str(e)}")
-        return jsonify({'valid': False})
+        return jsonify({'valid': False, 'message': 'Login failed'})
 
 @app.route('/calculate-hire', methods=['POST'])
 def calculate_hire():
@@ -117,11 +139,18 @@ def calculate_hire():
         ]
     })
 
-# Admin route to view users
 @app.route('/admin/users')
 def view_users():
-    users = load_users()
-    return jsonify(users)
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=DictCursor)
+        cur.execute('SELECT email, loyalty_card FROM users')
+        users = {row['email']: {'loyalty_card': row['loyalty_card']} for row in cur.fetchall()}
+        cur.close()
+        conn.close()
+        return jsonify(users)
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
     app.run()

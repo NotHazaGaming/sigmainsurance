@@ -26,6 +26,7 @@
             color: white;
             border: none;
             cursor: pointer;
+            margin-right: 10px;
         }
         #result {
             margin-top: 20px;
@@ -33,119 +34,214 @@
             border: 1px solid #ddd;
             white-space: pre-line;
         }
+        .auth-forms {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+        .error {
+            color: red;
+            margin-top: 5px;
+        }
+        .success {
+            color: green;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <h1>Fordham Vehicle Hire Quote Generator</h1>
     
-    <div class="form-group">
-        <label for="email">Email:</label>
-        <input type="email" id="email" onblur="checkExistingCustomer()">
+    <!-- Authentication Section -->
+    <div class="auth-forms">
+        <div id="customerTypeSelection">
+            <h2>Select Customer Type</h2>
+            <button onclick="showForm('new')">New Customer</button>
+            <button onclick="showForm('existing')">Existing Customer</button>
+        </div>
+
+        <!-- Registration Form -->
+        <div id="registrationForm" class="hidden">
+            <h2>New Customer Registration</h2>
+            <div class="form-group">
+                <label for="regEmail">Email:</label>
+                <input type="email" id="regEmail">
+            </div>
+            <div class="form-group">
+                <label for="regPassword">Password:</label>
+                <input type="password" id="regPassword">
+            </div>
+            <button onclick="register()">Register</button>
+            <button onclick="showForm('select')">Back</button>
+            <div id="regMessage"></div>
+        </div>
+
+        <!-- Login Form -->
+        <div id="loginForm" class="hidden">
+            <h2>Existing Customer Login</h2>
+            <div class="form-group">
+                <label for="loginEmail">Email:</label>
+                <input type="email" id="loginEmail">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password:</label>
+                <input type="password" id="loginPassword">
+            </div>
+            <button onclick="login()">Login</button>
+            <button onclick="showForm('select')">Back</button>
+            <div id="loginMessage"></div>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label for="vehicleType">Vehicle Type:</label>
-        <select id="vehicleType">
-            <option value="S">Saloon</option>
-            <option value="HP">High Performance</option>
-            <option value="V">Van</option>
-        </select>
-    </div>
+    <!-- Quote Form (Initially Hidden) -->
+    <div id="quoteForm" class="hidden">
+        <div class="form-group">
+            <label for="vehicleType">Vehicle Type:</label>
+            <select id="vehicleType">
+                <option value="S">Saloon</option>
+                <option value="HP">High Performance</option>
+                <option value="V">Van</option>
+            </select>
+        </div>
 
-    <div class="form-group">
-        <label for="days">Number of Days:</label>
-        <select id="days">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-        </select>
-    </div>
+        <div class="form-group">
+            <label for="days">Number of Days:</label>
+            <select id="days">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+            </select>
+        </div>
 
-    <div class="form-group">
-        <label for="insurance">Insurance Required:</label>
-        <select id="insurance">
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-        </select>
-    </div>
+        <div class="form-group">
+            <label for="insurance">Insurance Required:</label>
+            <select id="insurance">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+        </div>
 
-    <div class="form-group">
-        <label for="customerType">Customer Type:</label>
-        <select id="customerType" onchange="handleCustomerTypeChange()">
-            <option value="new">New</option>
-            <option value="existing">Existing</option>
-        </select>
+        <button onclick="generateQuote()">Generate Quote</button>
+        <button onclick="logout()">Logout</button>
     </div>
-
-    <div class="form-group">
-        <label for="loyaltyCard">Loyalty Card:</label>
-        <select id="loyaltyCard" disabled>
-            <option value="">None</option>
-            <option value="bronze">Bronze</option>
-            <option value="silver">Silver</option>
-            <option value="gold">Gold</option>
-        </select>
-    </div>
-
-    <button onclick="generateQuote()">Generate Quote</button>
 
     <div id="result"></div>
 
     <script>
-        async function checkExistingCustomer() {
-            const email = document.getElementById('email').value;
-            if (!email) return;
+        let currentUser = null;
+        let userLoyaltyCard = null;
+
+        function showForm(type) {
+            document.getElementById('customerTypeSelection').classList.add('hidden');
+            document.getElementById('registrationForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('quoteForm').classList.add('hidden');
+
+            if (type === 'new') {
+                document.getElementById('registrationForm').classList.remove('hidden');
+            } else if (type === 'existing') {
+                document.getElementById('loginForm').classList.remove('hidden');
+            } else if (type === 'select') {
+                document.getElementById('customerTypeSelection').classList.remove('hidden');
+            }
+        }
+
+        async function register() {
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const messageDiv = document.getElementById('regMessage');
 
             try {
-                const response = await fetch('/check-email', {
+                const response = await fetch('/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ email })
+                    body: JSON.stringify({ email, password })
                 });
                 const data = await response.json();
                 
-                if (data.exists) {
-                    document.getElementById('customerType').value = 'existing';
-                    document.getElementById('loyaltyCard').disabled = false;
-                    if (data.loyaltyCard) {
-                        document.getElementById('loyaltyCard').value = data.loyaltyCard;
-                    }
+                if (data.success) {
+                    messageDiv.className = 'success';
+                    messageDiv.textContent = data.message;
+                    currentUser = email;
+                    userLoyaltyCard = 'bronze'; // New users start with bronze
+                    setTimeout(() => {
+                        document.getElementById('quoteForm').classList.remove('hidden');
+                        document.getElementById('registrationForm').classList.add('hidden');
+                    }, 1000);
+                } else {
+                    messageDiv.className = 'error';
+                    messageDiv.textContent = data.message;
                 }
             } catch (error) {
-                console.error('Error:', error);
+                messageDiv.className = 'error';
+                messageDiv.textContent = 'Registration failed. Please try again.';
             }
         }
 
-        function handleCustomerTypeChange() {
-            const customerType = document.getElementById('customerType').value;
-            const loyaltyCard = document.getElementById('loyaltyCard');
-            loyaltyCard.disabled = customerType === 'new';
-            if (customerType === 'new') {
-                loyaltyCard.value = '';
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const messageDiv = document.getElementById('loginMessage');
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                
+                if (data.valid) {
+                    messageDiv.className = 'success';
+                    messageDiv.textContent = 'Login successful!';
+                    currentUser = email;
+                    userLoyaltyCard = data.loyalty_card;
+                    setTimeout(() => {
+                        document.getElementById('quoteForm').classList.remove('hidden');
+                        document.getElementById('loginForm').classList.add('hidden');
+                    }, 1000);
+                } else {
+                    messageDiv.className = 'error';
+                    messageDiv.textContent = 'Invalid email or password';
+                }
+            } catch (error) {
+                messageDiv.className = 'error';
+                messageDiv.textContent = 'Login failed. Please try again.';
             }
+        }
+
+        function logout() {
+            currentUser = null;
+            userLoyaltyCard = null;
+            document.getElementById('quoteForm').classList.add('hidden');
+            document.getElementById('result').textContent = '';
+            showForm('select');
         }
 
         async function generateQuote() {
+            if (!currentUser) {
+                alert('Please login or register first');
+                return;
+            }
+
             const vehicleType = document.getElementById('vehicleType').value;
             const days = document.getElementById('days').value;
             const insurance = document.getElementById('insurance').value;
-            const customerType = document.getElementById('customerType').value;
-            const loyaltyCard = document.getElementById('loyaltyCard').value;
-            const email = document.getElementById('email').value;
-
-            if (!email) {
-                alert('Please enter an email address');
-                return;
-            }
 
             try {
                 const response = await fetch('/calculate-hire', {
@@ -154,11 +250,11 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        email,
+                        email: currentUser,
                         vehicleType,
                         days: parseInt(days),
                         insurance,
-                        loyaltyCard: customerType === 'existing' ? loyaltyCard : null
+                        loyaltyCard: userLoyaltyCard
                     })
                 });
 
@@ -173,7 +269,8 @@
                     ---- Vehicle Hire Quote ----
                     Vehicle Type: ${vehicleType === 'S' ? 'Saloon' : vehicleType === 'HP' ? 'High Performance' : 'Van'}
                     Number of Days Hired: ${days}
-                    Customer Type: ${customerType.charAt(0).toUpperCase() + customerType.slice(1)}
+                    Customer Type: ${userLoyaltyCard ? 'Existing' : 'New'}
+                    Loyalty Card: ${userLoyaltyCard || 'None'}
                     Total Hire Cost: £${data.totalCost}
                     Insurance Cover Included: ${insurance === 'yes' ? 'Yes' : 'No'}
                     Discounts Applied: ${discountsText || 'None'}

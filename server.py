@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask
 
 # Create the Flask app
 app = Flask(__name__)
@@ -6,7 +6,8 @@ app = Flask(__name__)
 # Define routes
 @app.route('/')
 def home():
-    return render_template('index.html')
+    with open('index.html', 'r') as f:
+        return f.read()
 
 # Only if running directly (not through Gunicorn)
 if __name__ == '__main__':

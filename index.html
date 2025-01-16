@@ -607,6 +607,26 @@
             0%, 100% { opacity: 0.5; }
             50% { opacity: 1; }
         }
+
+        /* Password match indicator */
+        #confirmPassword:valid:not(:placeholder-shown) {
+            border-color: var(--success-color);
+        }
+
+        #confirmPassword:invalid:not(:placeholder-shown) {
+            border-color: var(--error-color);
+        }
+
+        /* Error message animation */
+        .message.error {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
     </style>
 </head>
 <body>
@@ -641,19 +661,22 @@
     <!-- Signup Modal -->
     <div id="signupModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="hideModal('signupModal')">&times;</span>
             <h2>Sign Up</h2>
             <div class="form-group">
                 <label for="regEmail">Email:</label>
-                <input type="email" id="regEmail">
+                <input type="email" id="regEmail" required>
             </div>
             <div class="form-group">
                 <label for="regPassword">Password:</label>
-                <input type="password" id="regPassword">
-                <small>Password must contain at least 8 characters, one uppercase letter, one number, and one special character.</small>
+                <input type="password" id="regPassword" required>
             </div>
-            <button onclick="register()">Sign Up</button>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password:</label>
+                <input type="password" id="confirmPassword" required>
+            </div>
             <div id="regMessage"></div>
+            <button onclick="register()">Sign Up</button>
+            <button onclick="hideModal('signupModal')">Cancel</button>
         </div>
     </div>
 
@@ -760,7 +783,23 @@
         async function register() {
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
             const messageDiv = document.getElementById('regMessage');
+            
+            // Check if passwords match
+            if (password !== confirmPassword) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'Passwords do not match';
+                return;
+            }
+
+            // Check password requirements
+            const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+            if (!passwordRegex.test(password)) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'Password must be at least 8 characters long and contain at least one uppercase letter, one number, and one special character';
+                return;
+            }
             
             try {
                 const response = await fetch('/register', {
@@ -781,6 +820,11 @@
                     // Store user info
                     localStorage.setItem('currentUser', email);
                     localStorage.setItem('userLoyaltyCard', 'bronze');
+                    
+                    // Clear form
+                    document.getElementById('regEmail').value = '';
+                    document.getElementById('regPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
                     
                     setTimeout(() => {
                         hideModal('signupModal');

@@ -1,51 +1,37 @@
 from flask import Flask, request, jsonify
-import os
 import json
-from datetime import datetime
+import os
 
 app = Flask(__name__)
 
-# File paths
+# File to store users
 USERS_FILE = 'users.json'
-BACKUP_DIR = 'backups'
 
-# Ensure backup directory exists
-if not os.path.exists(BACKUP_DIR):
-    os.makedirs(BACKUP_DIR)
-
-def backup_users():
-    """Backup users before each deployment"""
-    if os.path.exists(USERS_FILE):
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        backup_file = f'{BACKUP_DIR}/users_backup_{timestamp}.json'
-        with open(USERS_FILE, 'r') as source:
-            users = json.load(source)
-            with open(backup_file, 'w') as target:
-                json.dump(users, target, indent=2)
-        return users
-    return {}
-
-def restore_users():
-    """Restore users from most recent backup"""
-    backup_files = [f for f in os.listdir(BACKUP_DIR) if f.startswith('users_backup_')]
-    if backup_files:
-        latest_backup = max(backup_files)
-        with open(f'{BACKUP_DIR}/{latest_backup}', 'r') as f:
-            users = json.load(f)
-            with open(USERS_FILE, 'w') as target:
-                json.dump(users, target, indent=2)
-            return users
-    return {}
-
-# Initialize or restore users
+# Initialize empty users file if it doesn't exist
 if not os.path.exists(USERS_FILE):
-    users = restore_users()
-    with open(USERS_FILE, 'w') as f:
-        json.dump(users, f, indent=2)
+    with open(USERS_FILE, 'w', encoding='utf-8') as f:
+        json.dump({}, f)
+
+def load_users():
+    try:
+        with open(USERS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading users: {e}")
+        return {}
+
+def save_users(users):
+    try:
+        with open(USERS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(users, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"Error saving users: {e}")
+        return False
 
 @app.route('/')
 def home():
-    with open('index.html', 'r') as f:
+    with open('index.html', 'r', encoding='utf-8') as f:
         return f.read()
 
 @app.route('/register', methods=['POST'])
@@ -55,8 +41,10 @@ def register():
         email = data.get('email')
         password = data.get('password')
         
-        with open(USERS_FILE, 'r') as f:
-            users = json.load(f)
+        if not email or not password:
+            return jsonify({'success': False, 'message': 'Email and password required'})
+
+        users = load_users()
         
         if email in users:
             return jsonify({'success': False, 'message': 'Email already registered'})
@@ -66,13 +54,9 @@ def register():
             'loyalty_card': 'bronze'
         }
         
-        with open(USERS_FILE, 'w') as f:
-            json.dump(users, f, indent=2)
-        
-        # Create backup after registration
-        backup_users()
-        
-        return jsonify({'success': True, 'message': 'Registration successful'})
+        if save_users(users):
+            return jsonify({'success': True, 'message': 'Registration successful'})
+        return jsonify({'success': False, 'message': 'Error saving user data'})
     except Exception as e:
         print(f"Registration error: {str(e)}")
         return jsonify({'success': False, 'message': f'Registration error: {str(e)}'})
@@ -84,11 +68,6 @@ def login():
         email = data.get('email')
         password = data.get('password')
 
-        # Validate email format
-        if not is_valid_email(email):
-            return jsonify({'valid': False, 'message': 'Invalid email format'})
-
-        # Load users
         users = load_users()
 
         if email in users and users[email]['password'] == password:
@@ -96,10 +75,10 @@ def login():
                 'valid': True, 
                 'loyalty_card': users[email]['loyalty_card']
             })
-        return jsonify({'valid': False, 'message': 'Invalid email or password'})
+        return jsonify({'valid': False})
     except Exception as e:
         print(f"Login error: {str(e)}")
-        return jsonify({'valid': False, 'message': 'Login failed'})
+        return jsonify({'valid': False})
 
 @app.route('/calculate-hire', methods=['POST'])
 def calculate_hire():
@@ -107,7 +86,7 @@ def calculate_hire():
     vehicle_type = data.get('vehicleType')
     days = int(data.get('days', 0))
     insurance = data.get('insurance')
-    loyalty_card = data.get('loyaltyCard', None)  # Optional now
+    loyalty_card = data.get('loyaltyCard', None)
 
     # Daily charges
     daily_charges = {'S': 22.50, 'HP': 28.00, 'V': 35.00}
@@ -138,7 +117,7 @@ def calculate_hire():
         ]
     })
 
-# Admin route to view users (remove in production)
+# Admin route to view users
 @app.route('/admin/users')
 def view_users():
     users = load_users()
